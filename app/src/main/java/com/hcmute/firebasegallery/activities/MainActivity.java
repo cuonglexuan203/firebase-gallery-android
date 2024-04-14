@@ -9,6 +9,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.work.Constraints;
+import androidx.work.Data;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
+import androidx.work.WorkRequest;
 
 import android.content.Intent;
 import android.widget.Toast;
@@ -22,13 +28,15 @@ import com.google.firebase.database.ValueEventListener;
 import com.hcmute.firebasegallery.model.DataClass;
 import com.hcmute.firebasegallery.R;
 import com.hcmute.firebasegallery.adapter.FirebaseAdapter;
+import com.hcmute.firebasegallery.worker.ImageLoaderCallback;
+import com.hcmute.firebasegallery.worker.ImageLoaderWorker;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ImageLoaderCallback {
 
     FloatingActionButton fab;
     private RecyclerView recyclerView;
@@ -57,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
         adapter = new FirebaseAdapter(this, dataList);
         recyclerView.setAdapter(adapter);
         //
+        ImageLoaderWorker.setCallback(this);
+        //
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -72,9 +82,13 @@ public class MainActivity extends AppCompatActivity {
                         && totalItemCount >= PAGE_SIZE) {
                     adapter.setLoading(true);
                     if (!isReachEndOfData) {
-                    // Load the next page of data
+                        // Load the next page of data
                         isLoading = true;
-                        loadNextPage();
+//                        loadNextPage();
+                        Data inputData = createData(lastKey, PAGE_SIZE);
+                        WorkRequest workRequest = createWorkRequest(inputData);
+                        // Enqueue loading image asynchronously
+                        enqueueWorkRequest(workRequest);
                     }
 
                 }
@@ -90,6 +104,32 @@ public class MainActivity extends AppCompatActivity {
             finish();
         });
     }
+
+    private Data createData(String lastKey, final int PAGE_SIZE) {
+        Data inputData = new Data.Builder()
+                .putString("lastKey", lastKey)
+                .putInt("PAGE_SIZE", PAGE_SIZE)
+                .build();
+        return inputData;
+    }
+
+    private WorkRequest createWorkRequest(Data data) {
+
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED) // Add any necessary constraints
+                .build();
+
+        OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(ImageLoaderWorker.class)
+                .setConstraints(constraints)
+                .setInputData(data)
+                .build();
+        return workRequest;
+    }
+
+    private void enqueueWorkRequest(WorkRequest workRequest) {
+        WorkManager.getInstance(this).enqueue(workRequest);
+    }
+
 
     private void updateUI(DataSnapshot snapshot) {
         Iterator<DataSnapshot> iter = snapshot.getChildren().iterator();
@@ -124,19 +164,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void loadNextPage() {
-        databaseReference.orderByKey().startAfter(lastKey).limitToFirst(PAGE_SIZE)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        updateUI(snapshot);
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        isLoading = false;
-                    }
-                });
+    @Override
+    public void onPageLoadedSuccessfully(DataSnapshot snapshot) {
+        updateUI(snapshot);
     }
 
+    @Override
+    public void onPageLoadFailed(String errorMessage) {
+        isLoading = false;
+    }
+
+    //    public void loadNextPage() {
+//        databaseReference.orderByKey().startAfter(lastKey).limitToFirst(PAGE_SIZE)
+//                .addListenerForSingleValueEvent(new ValueEventListener() {
+//                    @Override
+//                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+//                        updateUI(snapshot);
+//                    }
+//
+//                    @Override
+//                    public void onCancelled(@NonNull DatabaseError error) {
+//                        isLoading = false;
+//                    }
+//                });
+//    }
 }

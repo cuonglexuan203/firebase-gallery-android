@@ -39,6 +39,7 @@ public class UploadActivity extends AppCompatActivity {
     EditText uploadCaption;
     ProgressBar progressBar;
     private Uri imageUri;
+    private FloatingActionButton returnButton;
     final  private DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Images");
     final private StorageReference storageReference = FirebaseStorage.getInstance().getReference();
 
@@ -52,6 +53,15 @@ public class UploadActivity extends AppCompatActivity {
         uploadImage = findViewById(R.id.uploadImage);
         progressBar = findViewById(R.id.progressBar);
         progressBar.setVisibility(View.INVISIBLE);
+        returnButton = findViewById(R.id.returnButton);
+
+        //
+
+        returnButton.setOnClickListener(v -> {
+            Intent intent = new Intent(UploadActivity.this, MainActivity.class);
+            startActivity(intent);
+            finish();
+        });
 
         ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),

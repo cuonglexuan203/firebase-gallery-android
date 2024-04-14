@@ -6,13 +6,25 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/uploadingbg"
+    android:orientation="vertical"
     tools:context=".activities.UploadActivity">
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/returnButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:backgroundTint="#121F88"
+        android:rotation="180"
+        android:src="@drawable/baseline_send_24"
+        android:layout_marginTop="20dp"
+        app:tint="@color/white" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="15dp"
-        android:layout_marginTop="150dp"
+        android:layout_marginTop="100dp"
         android:layout_marginEnd="15dp"
         android:background="@drawable/lavender_border"
         android:orientation="vertical"
