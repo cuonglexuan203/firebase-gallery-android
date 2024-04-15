@@ -1,5 +1,6 @@
 package com.hcmute.firebasegallery.activities;
 
+
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -27,6 +28,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.hcmute.firebasegallery.activities.UploadActivity;
 import com.hcmute.firebasegallery.model.DataClass;
 import com.hcmute.firebasegallery.R;
 import com.hcmute.firebasegallery.adapter.FirebaseAdapter;
@@ -38,13 +40,13 @@ import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class MainActivity extends AppCompatActivity implements ImageLoaderCallback {
+public class StaggeredActivity extends AppCompatActivity implements ImageLoaderCallback {
 
     FloatingActionButton fab;
     private RecyclerView recyclerView;
     private ArrayList<DataClass> dataList;
+    private Button recyclerButton;
     private FirebaseAdapter adapter;
-    private Button staggeredButton;
     final private DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Images");
 
     //
@@ -57,14 +59,14 @@ public class MainActivity extends AppCompatActivity implements ImageLoaderCallba
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_staggered);
 
         fab = findViewById(R.id.fab);
         recyclerView = findViewById(R.id.recyclerView);
-        staggeredButton = findViewById(R.id.staggeredButton);
+        recyclerButton = findViewById(R.id.recyclerButton);
         //
         recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
         dataList = new ArrayList<>();
         adapter = new FirebaseAdapter(this, dataList);
         recyclerView.setAdapter(adapter);
@@ -75,10 +77,26 @@ public class MainActivity extends AppCompatActivity implements ImageLoaderCallba
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+//                LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+//                int visibleItemCount = layoutManager.getChildCount();
+//                int totalItemCount = layoutManager.getItemCount();
+//                int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
+
+                StaggeredGridLayoutManager layoutManager = (StaggeredGridLayoutManager) recyclerView.getLayoutManager();
+
+                // Get the array of positions for the first visible items in each span
+                int[] firstVisibleItemPositions = layoutManager.findFirstVisibleItemPositions(null);
+
+                // Find the minimum first visible item position (since it's staggered)
+                int firstVisibleItemPosition = firstVisibleItemPositions[0];
+                for (int i = 1; i < firstVisibleItemPositions.length; i++) {
+                    if (firstVisibleItemPositions[i] < firstVisibleItemPosition) {
+                        firstVisibleItemPosition = firstVisibleItemPositions[i];
+                    }
+                }
+
                 int visibleItemCount = layoutManager.getChildCount();
                 int totalItemCount = layoutManager.getItemCount();
-                int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
 
                 // Check if the end of the list is reached and not currently loading
                 if (!isLoading && (visibleItemCount + firstVisibleItemPosition) >= totalItemCount
@@ -103,17 +121,16 @@ public class MainActivity extends AppCompatActivity implements ImageLoaderCallba
 
         //
         fab.setOnClickListener((v) -> {
-            Intent intent = new Intent(MainActivity.this, UploadActivity.class);
+            Intent intent = new Intent(com.hcmute.firebasegallery.activities.StaggeredActivity.this, UploadActivity.class);
             startActivity(intent);
             finish();
         });
 
-        staggeredButton.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, StaggeredActivity.class);
+        recyclerButton.setOnClickListener(v -> {
+            Intent intent = new Intent(StaggeredActivity.this, MainActivity.class);
             startActivity(intent);
             finish();
         });
-
     }
 
     private Data createData(String lastKey, final int PAGE_SIZE) {

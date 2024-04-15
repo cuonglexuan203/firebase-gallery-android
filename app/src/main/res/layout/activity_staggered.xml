@@ -6,10 +6,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginTop="28dp"
-    tools:context=".activities.MainActivity">
-
+    tools:context=".activities.StaggeredActivity">
     <Button
-        android:id="@+id/staggeredButton"
+        android:id="@+id/recyclerButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
@@ -19,8 +18,7 @@
         android:layout_marginStart="244dp"
         android:layout_marginTop="0dp"
         android:layout_marginEnd="6dp"
-        android:text="-> Staggered" />
-
+        android:text="-> Recycler" />
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="wrap_content"
@@ -32,11 +30,10 @@
         app:tint = "@color/white"
         android:src="@drawable/baseline_add_24" />
 
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
+        android:layout_below="@id/recyclerButton"
+        android:layout_marginTop="4dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/staggeredButton"
-        android:layout_marginTop="4dp" />
+        android:layout_height="match_parent" />
 </RelativeLayout>
